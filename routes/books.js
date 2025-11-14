@@ -3,9 +3,7 @@
 const express = require("express");
 const router = express.Router();
 
-/* -------------------------------
-   LIST ALL BOOKS
---------------------------------*/
+
 router.get('/list', function (req, res, next) {
     let sqlquery = "SELECT * FROM books";
 
@@ -19,9 +17,7 @@ router.get('/list', function (req, res, next) {
     });
 });
 
-/* -------------------------------
-   ADD BOOK (POST)
---------------------------------*/
+
 router.post('/bookadded', function (req, res, next) {
     let sqlquery = "INSERT INTO books (name, price) VALUES (?, ?)";
 
@@ -41,9 +37,7 @@ router.post('/bookadded', function (req, res, next) {
     });
 });
 
-/* -------------------------------
-   BARGAIN BOOKS (price < 20)
---------------------------------*/
+
 router.get('/bargainbooks', function (req, res, next) {
     let sqlquery = "SELECT * FROM books WHERE price < 20";
 
@@ -57,9 +51,7 @@ router.get('/bargainbooks', function (req, res, next) {
     });
 });
 
-/* -------------------------------
-   SEARCH FORM PAGE
---------------------------------*/
+
 router.get('/search', function (req, res, next) {
     res.render('search.ejs', {
         shopData: req.app.locals.shopData
