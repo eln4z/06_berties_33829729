@@ -1,28 +1,87 @@
-// Create a new router
-const express = require("express")
-const router = express.Router()
+// routes/books.js
 
-router.get('/search',function(req, res, next){
-    res.render("search.ejs")
+const express = require("express");
+const router = express.Router();
+
+/* -------------------------------
+   LIST ALL BOOKS
+--------------------------------*/
+router.get('/list', function (req, res, next) {
+    let sqlquery = "SELECT * FROM books";
+
+    db.query(sqlquery, (err, result) => {
+        if (err) { next(err); }
+
+        res.render("list.ejs", {
+            availableBooks: result,
+            shopData: req.app.locals.shopData
+        });
+    });
 });
+
+/* -------------------------------
+   ADD BOOK (POST)
+--------------------------------*/
+router.post('/bookadded', function (req, res, next) {
+    let sqlquery = "INSERT INTO books (name, price) VALUES (?, ?)";
+
+    let newrecord = [
+        req.body.name,
+        req.body.price
+    ];
+
+    db.query(sqlquery, newrecord, (err, result) => {
+        if (err) { next(err); }
+        else {
+            res.send(
+                "This book is added to database: " +
+                req.body.name + " — £" + req.body.price
+            );
+        }
+    });
+});
+
+/* -------------------------------
+   BARGAIN BOOKS (price < 20)
+--------------------------------*/
+router.get('/bargainbooks', function (req, res, next) {
+    let sqlquery = "SELECT * FROM books WHERE price < 20";
+
+    db.query(sqlquery, (err, result) => {
+        if (err) { next(err); }
+
+        res.render("list.ejs", {
+            availableBooks: result,
+            shopData: req.app.locals.shopData
+        });
+    });
+});
+
+/* -------------------------------
+   SEARCH FORM PAGE
+--------------------------------*/
+router.get('/search', function (req, res, next) {
+    res.render('search.ejs', {
+        shopData: req.app.locals.shopData
+    });
+});
+
 
 router.get('/search-result', function (req, res, next) {
-    //searching in the database
-    res.send("You searched for: " + req.query.keyword)
-});
+    let keyword = req.query.keyword;
+    let sqlquery = "SELECT * FROM books WHERE name LIKE ?";
 
-router.get('/list', function(req, res, next) {
-    let sqlquery = "SELECT * FROM books"; // query database to get all the books
-    // execute sql query
-    db.query(sqlquery, (err, result) => {
-        if (err) {
-            next(err)
-        }
-        res.render("list.ejs", {availableBooks:result})
+    let searchValue = '%' + keyword + '%';
 
+    db.query(sqlquery, [searchValue], (err, result) => {
+        if (err) { next(err); }
 
+        res.render("list.ejs", {
+            availableBooks: result,
+            shopData: req.app.locals.shopData
         });
+    });
 });
 
-// Export the router object so index.js can access it
-module.exports = router
+// Export router
+module.exports = router;
