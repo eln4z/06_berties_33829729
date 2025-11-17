@@ -28,7 +28,7 @@ The app lets you view books, add new ones, see bargain books, and search the dat
 
 3. Open your browser and go to:
 
-   http://localhost:8001/
+   http://localhost:8000/
  
 
 
