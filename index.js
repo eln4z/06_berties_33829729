@@ -6,7 +6,8 @@ const mysql = require('mysql2');
 
 // Create the express application object
 const app = express();
-const port = 8001; // your chosen port
+const port = 8000
+
 
 // Tell Express we want to use EJS as the view engine
 app.set('view engine', 'ejs');
