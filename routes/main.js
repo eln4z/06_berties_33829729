@@ -1,33 +1,30 @@
-// Create a new router
-const express = require("express")
-const router = express.Router()
+// routes/main.js
+const express = require("express");
+const router = express.Router();
 
-// Handle our routes
-router.get('/',function(req, res, next){
-    res.render('index.ejs')
+// Load sub-routers
+const booksRouter = require("./books");
+const usersRouter = require("./users");
+
+// Home page
+router.get("/", function (req, res, next) {
+  res.render("index.ejs", {
+    shopData: req.app.locals.shopData
+  });
 });
 
-router.get('/about',function(req, res, next){
-    res.render('about.ejs')
+// About page
+router.get("/about", function (req, res, next) {
+  res.render("about.ejs", {
+    shopData: req.app.locals.shopData
+  });
 });
 
-router.get('/books/addbook',function(req, res, next){
-    res.render('addbook.ejs')
-});
+// Mount /books routes
+router.use("/books", booksRouter);
 
-router.post('/books/bookadded', function (req, res, next) {
-    // saving data in database
-    let sqlquery = "INSERT INTO books (name, price) VALUES (?,?)"
-    // execute sql query
-    let newrecord = [req.body.name, req.body.price]
-    db.query(sqlquery, newrecord, (err, result) => {
-        if (err) {
-            next(err)
-        }
-        else
-            res.send(' This book is added to database, name: '+ req.body.name + ' price '+ req.body.price)
-    })
-}) 
+// Mount /users routes
+router.use("/users", usersRouter);
 
 // Export the router object so index.js can access it
-module.exports = router
+module.exports = router;

@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Audit Log - <%= shopData.shopName %>
+    </title>
+    <link rel="stylesheet" type="text/css" href="/main.css" />
+</head>
+
+<body>
+    <h1>Audit Log</h1>
+
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>Time</th>
+            <th>Username</th>
+            <th>Success</th>
+            <th>Message</th>
+        </tr>
+        <% logs.forEach(row=> { %>
+            <tr>
+                <td>
+                    <%= row.time.toISOString ? row.time.toISOString() : row.time %>
+                </td>
+                <td>
+                    <%= row.username %>
+                </td>
+                <td>
+                    <%= row.success ? 'Yes' : 'No' %>
+                </td>
+                <td>
+                    <%= row.message %>
+                </td>
+            </tr>
+            <% }); %>
+    </table>
+
+    <p><a href="/">Home</a></p>
+</body>
+
+</html>

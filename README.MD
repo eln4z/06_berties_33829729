@@ -56,3 +56,12 @@ This is a learning project to practise:
 * Working with forms
 * SQL queries
 * Connecting Node.js with MySQL
+
+## dotenv
+
+I used the dotenv module to move my database credentials out of the source code.
+
+- I created a .env file with DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_CONNECTION_LIMIT.
+- In index.js I call require('dotenv').config() and read these values using process.env.
+- The .env file is in .gitignore so the credentials are not pushed to GitHub.
+- On the VM I created the same .env file so the app can connect to the MySQL database there.
