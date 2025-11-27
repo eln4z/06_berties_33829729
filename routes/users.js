@@ -1,25 +1,26 @@
-// routes/users.js
-
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const saltRounds = 10;
 
-// Use the global db connection (set in index.js)
 const db = global.db;
 
-// ------------------------------------
-// SHOW REGISTRATION FORM
-// ------------------------------------
+
+const redirectLogin = (req, res, next) => {
+  if (!req.session.userId) {
+    return res.redirect("/users/login");
+  }
+  next();
+};
+
+
 router.get("/register", function (req, res, next) {
   res.render("register.ejs", {
     shopData: req.app.locals.shopData
   });
 });
 
-// ------------------------------------
-// TASK 2 – HANDLE REGISTRATION (HASH PASSWORD)
-// ------------------------------------
+
 router.post("/registered", function (req, res, next) {
   const username = req.body.username;
   const first = req.body.first;
@@ -47,7 +48,6 @@ router.post("/registered", function (req, res, next) {
           .send("Error saving user to database: " + err.message);
       }
 
-      // Required by Lab 7 – Debug output
       let response = `
         Hello ${first} ${last}, you are now registered!<br>
         We will send an email to you at ${email}.<br><br>
@@ -60,10 +60,8 @@ router.post("/registered", function (req, res, next) {
   });
 });
 
-// ------------------------------------
-// TASK 3 – /users/list (NO PASSWORDS)
-// ------------------------------------
-router.get("/list", function (req, res, next) {
+
+router.get("/list", redirectLogin, function (req, res, next) {
   const sql = "SELECT username, first_name, last_name, email FROM users";
 
   db.query(sql, (err, results) => {
@@ -79,18 +77,14 @@ router.get("/list", function (req, res, next) {
   });
 });
 
-// ------------------------------------
-// TASK 4 – SHOW LOGIN FORM
-// ------------------------------------
+
 router.get("/login", function (req, res, next) {
   res.render("login.ejs", {
     shopData: req.app.locals.shopData
   });
 });
 
-// ------------------------------------
-// TASK 4 & TASK 6 – HANDLE LOGIN + AUDIT LOGGING
-// ------------------------------------
+
 router.post("/loggedin", function (req, res, next) {
   const username = req.body.username;
   const plainPassword = req.body.password;
@@ -102,9 +96,6 @@ router.post("/loggedin", function (req, res, next) {
       return next(err);
     }
 
-    // ---------------------------
-    // USER NOT FOUND
-    // ---------------------------
     if (results.length === 0) {
       const auditSql =
         "INSERT INTO audit_log (username, success, message) VALUES (?, ?, ?)";
@@ -115,22 +106,20 @@ router.post("/loggedin", function (req, res, next) {
     const user = results[0];
     const hashedPassword = user.hashedPassword;
 
-    // ---------------------------
-    // PASSWORD CHECK
-    // ---------------------------
     bcrypt.compare(plainPassword, hashedPassword, function (err, match) {
       if (err) {
         console.error("Error comparing passwords:", err);
         return next(err);
       }
 
-      // ---------------------------
-      // LOGIN SUCCESS
-      // ---------------------------
+  
       if (match === true) {
         const auditSql =
           "INSERT INTO audit_log (username, success, message) VALUES (?, ?, ?)";
         db.query(auditSql, [username, 1, "login ok"]);
+
+      
+        req.session.userId = user.id;
 
         return res.send(
           "Login successful! Welcome back, " +
@@ -141,9 +130,7 @@ router.post("/loggedin", function (req, res, next) {
         );
       }
 
-      // ---------------------------
-      // WRONG PASSWORD
-      // ---------------------------
+   
       const auditSql =
         "INSERT INTO audit_log (username, success, message) VALUES (?, ?, ?)";
       db.query(auditSql, [username, 0, "incorrect password"]);
@@ -153,10 +140,8 @@ router.post("/loggedin", function (req, res, next) {
   });
 });
 
-// ------------------------------------
-// TASK 6 – SHOW AUDIT LOG
-// ------------------------------------
-router.get("/audit", function (req, res, next) {
+
+router.get("/audit", redirectLogin, function (req, res, next) {
   const sql = "SELECT * FROM audit_log ORDER BY time DESC";
 
   db.query(sql, (err, results) => {
@@ -172,7 +157,5 @@ router.get("/audit", function (req, res, next) {
   });
 });
 
-// ------------------------------------
-// EXPORT ROUTER
-// ------------------------------------
+
 module.exports = router;

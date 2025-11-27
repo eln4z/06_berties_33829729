@@ -1,4 +1,5 @@
 const express = require('express');
+const session = require('express-session');
 const ejs = require('ejs');
 const path = require('path');
 const mysql = require('mysql2');
@@ -18,6 +19,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 app.locals.shopData = { shopName: "Bertie's Books" };
+
+app.use(session({
+    secret: 'somerandomstuff',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        expires: 600000
+    }
+}));
+
 
 
 const db = mysql.createPool({
