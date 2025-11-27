@@ -6,7 +6,6 @@ const { check, validationResult } = require("express-validator");
 
 const db = global.db;
 
-// Middleware to require login
 const redirectLogin = (req, res, next) => {
   if (!req.session.userId) {
     return res.redirect("/users/login");
@@ -14,7 +13,6 @@ const redirectLogin = (req, res, next) => {
   next();
 };
 
-// Register form
 router.get("/register", function (req, res, next) {
   res.render("register.ejs", {
     shopData: req.app.locals.shopData,
@@ -26,7 +24,6 @@ router.get("/register", function (req, res, next) {
   });
 });
 
-// Handle registration with validation + sanitisation
 router.post(
   "/registered",
   [
@@ -48,15 +45,12 @@ router.post(
   ],
   function (req, res, next) {
     const errors = validationResult(req);
-
-    // Sanitise inputs to protect against XSS
     const username = req.sanitize(req.body.username);
     const first = req.sanitize(req.body.first);
     const last = req.sanitize(req.body.last);
     const email = req.sanitize(req.body.email);
-    const plainPassword = req.body.password; // keep raw for hashing
+    const plainPassword = req.body.password;
 
-    // If validation fails, re-render the register page with errors + sticky values
     if (!errors.isEmpty()) {
       return res.render("register.ejs", {
         shopData: req.app.locals.shopData,
@@ -68,7 +62,6 @@ router.post(
       });
     }
 
-    // Check if username already exists
     const checkSql = "SELECT id FROM users WHERE username = ?";
     db.query(checkSql, [username], (err, rows) => {
       if (err) {
@@ -77,7 +70,6 @@ router.post(
       }
 
       if (rows.length > 0) {
-        // Username taken – re-render with message and keep entered values
         return res.render("register.ejs", {
           shopData: req.app.locals.shopData,
           errors: [{ msg: "Username already exists. Please choose another." }],
@@ -88,7 +80,6 @@ router.post(
         });
       }
 
-      // Username is free – hash password and insert
       bcrypt.hash(plainPassword, saltRounds, function (err, hashedPassword) {
         if (err) {
           console.error("Error hashing password:", err);
@@ -109,7 +100,6 @@ router.post(
               .send("Error saving user to database: " + err.message);
           }
 
-          // Redirect to login page after successful registration
           res.redirect("/users/login");
         });
       });
@@ -117,7 +107,6 @@ router.post(
   }
 );
 
-// List users (protected)
 router.get("/list", redirectLogin, function (req, res, next) {
   const sql = "SELECT username, first_name, last_name, email FROM users";
 
@@ -134,14 +123,12 @@ router.get("/list", redirectLogin, function (req, res, next) {
   });
 });
 
-// Login form
 router.get("/login", function (req, res, next) {
   res.render("login.ejs", {
     shopData: req.app.locals.shopData
   });
 });
 
-// Handle login (with sanitised username)
 router.post("/loggedin", function (req, res, next) {
   const username = req.sanitize(req.body.username);
   const plainPassword = req.body.password;
@@ -178,12 +165,9 @@ router.post("/loggedin", function (req, res, next) {
           "INSERT INTO audit_log (username, success, message) VALUES (?, ?, ?)";
         db.query(auditSql, [username, 1, "login ok"]);
 
-        // Save user session (user is now logged in)
         req.session.userId = user.id;
         req.session.username = user.username;
-
-        // Redirect to a protected page after successful login
-        return res.redirect("/books/list"); // change if you prefer another page
+        return res.redirect("/books/list");
       }
 
       const auditSql =
@@ -195,7 +179,6 @@ router.post("/loggedin", function (req, res, next) {
   });
 });
 
-// Audit log (protected)
 router.get("/audit", redirectLogin, function (req, res, next) {
   const sql = "SELECT * FROM audit_log ORDER BY time DESC";
 
@@ -212,7 +195,6 @@ router.get("/audit", redirectLogin, function (req, res, next) {
   });
 });
 
-// Logout (protected)
 router.get("/logout", redirectLogin, function (req, res, next) {
   req.session.destroy(err => {
     if (err) {

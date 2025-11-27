@@ -21,13 +21,12 @@
       <a href="/books/addbook">Add a new book</a>
 
       <% if (username) { %>
-        <!-- Logged-in view -->
         <span class="welcome">Welcome, <%= username %>!</span>
         <a href="/users/list">Users</a>
         <a href="/users/audit">Audit log</a>
         <a href="/users/logout">Logout</a>
         <% } else { %>
-          <!-- Logged-out view -->
+
           <a href="/users/login">Login</a>
           <a href="/users/register">Register</a>
           <% } %>

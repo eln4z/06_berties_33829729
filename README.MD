@@ -1,67 +1,128 @@
 # Bertie’s Books
 
-A small web application built for the **Dynamic Web Applications** module.
-The app lets you view books, add new ones, see bargain books, and search the database.
+A small Node.js web application built for the **Dynamic Web Applications** module.
+Users can create accounts, log in, and manage a list of books stored in a MySQL database.
 
+---
 
-## What the app can do
+## Features
 
-* Show a full list of books
-* Add a new book using a form
-* Save books into a MySQL database
-* Show bargain books (price under £20)
-* Search for books (exact and partial match)
-* Render pages using EJS templates
+### Users
 
+* Register an account
+* Log in and log out
+* Passwords stored securely (bcrypt)
+* Protected pages require login
+* Login attempts logged (audit log)
 
+### Books
 
-## How to run the app
+* View all books
+* Add a new book
+* Search by name
+* Bargain books (price < £20)
+* Server-side form validation
 
-1. Install the required packages:
+---
 
-   npm install
+## Technologies
 
+* Node.js + Express
+* MySQL (mysql2)
+* EJS templates
+* express-session
+* bcrypt
+* express-validator
+* dotenv
 
-2. Start the server:
+---
 
-   node index.js
+# Run the App (Local)
 
-3. Open your browser and go to:
+### 1. Install packages
+npm install
 
-   http://localhost:8000/
- 
+### 2. Create a `.env` file
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=yourpassword
+DB_NAME=berties_books
+DB_CONNECTION_LIMIT=10
+SESSION_SECRET=mysecret
 
+> `.env` is in `.gitignore` and not pushed to GitHub.
 
-## Database setup (MySQL)
-
-Create the database:
+### 3. Database setup
 
 ```sql
 CREATE DATABASE berties_books;
 USE berties_books;
+
+CREATE TABLE users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(50) UNIQUE,
+  first_name VARCHAR(100),
+  last_name VARCHAR(100),
+  email VARCHAR(255),
+  hashedPassword VARCHAR(255)
+);
 
 CREATE TABLE books (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(255),
   price DECIMAL(10,2)
 );
-```
 
-## About this project
+CREATE TABLE audit_log (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(255),
+  success TINYINT(1),
+  message VARCHAR(255),
+  time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
-This is a learning project to practise:
 
-* Express routes
-* EJS templates
-* Working with forms
-* SQL queries
-* Connecting Node.js with MySQL
+### 4. Start the server
 
-## dotenv
 
-I used the dotenv module to move my database credentials out of the source code.
+node index.js
 
-- I created a .env file with DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_CONNECTION_LIMIT.
-- In index.js I call require('dotenv').config() and read these values using process.env.
-- The .env file is in .gitignore so the credentials are not pushed to GitHub.
-- On the VM I created the same .env file so the app can connect to the MySQL database there.
+
+Then open:
+
+
+http://localhost:8000
+
+
+# Running With Forever (on VM)
+
+Start:
+
+
+forever start index.js
+
+
+Check running apps:
+
+
+forever list
+
+
+Stop:
+
+forever stop index.js
+
+
+Stop all:
+
+
+forever stopall
+
+## What I Learned
+
+* Creating routes with Express
+* Using EJS templates
+* Handling forms and validation
+* Connecting Node.js to MySQL
+* Password hashing and sessions
+* Protecting pages with middleware

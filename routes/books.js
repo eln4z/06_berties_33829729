@@ -4,10 +4,8 @@ const express = require("express");
 const router = express.Router();
 const { check, validationResult } = require("express-validator");
 
-// Use the global db connection (set in index.js)
 const db = global.db;
 
-// Middleware to require login for protected book routes
 const redirectLogin = (req, res, next) => {
   if (!req.session.userId) {
     return res.redirect("/users/login");
@@ -15,7 +13,6 @@ const redirectLogin = (req, res, next) => {
   next();
 };
 
-// List all books (protected)
 router.get("/list", redirectLogin, function (req, res, next) {
   const sqlquery = "SELECT * FROM books";
 
@@ -31,7 +28,6 @@ router.get("/list", redirectLogin, function (req, res, next) {
   });
 });
 
-// Show add book form (protected)
 router.get("/addbook", redirectLogin, function (req, res, next) {
   res.render("addbook.ejs", {
     shopData: req.app.locals.shopData,
@@ -41,7 +37,6 @@ router.get("/addbook", redirectLogin, function (req, res, next) {
   });
 });
 
-// Add a book to the database (protected + validated + sanitised)
 router.post(
   "/bookadded",
   redirectLogin,
@@ -57,7 +52,6 @@ router.post(
 
     const errors = validationResult(req);
 
-    // Sanitise inputs to protect against XSS
     const name = req.sanitize(req.body.name);
     const price = req.sanitize(req.body.price);
 
@@ -76,13 +70,10 @@ router.post(
         return next(err);
       }
 
-      // Better UX: redirect instead of plain text
       res.redirect("/books/list");
     });
   }
 );
-
-// Bargain books (< £20) (protected)
 router.get("/bargainbooks", redirectLogin, function (req, res, next) {
   const sqlquery = "SELECT * FROM books WHERE price < 20";
 
@@ -98,16 +89,13 @@ router.get("/bargainbooks", redirectLogin, function (req, res, next) {
   });
 });
 
-// Search form (public)
 router.get("/search", function (req, res, next) {
   res.render("search.ejs", {
     shopData: req.app.locals.shopData
   });
 });
 
-// Search results (public)
 router.get("/search-result", function (req, res, next) {
-  // Sanitise search keyword
   const keyword = req.sanitize(req.query.keyword || "");
   const sqlquery = "SELECT * FROM books WHERE name LIKE ?";
 
@@ -125,5 +113,4 @@ router.get("/search-result", function (req, res, next) {
   });
 });
 
-// Export router
 module.exports = router;
