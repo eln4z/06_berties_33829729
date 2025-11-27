@@ -2,6 +2,7 @@
 
 const express = require("express");
 const router = express.Router();
+const { check, validationResult } = require("express-validator");
 
 // Use the global db connection (set in index.js)
 const db = global.db;
@@ -25,8 +26,7 @@ router.get("/list", redirectLogin, function (req, res, next) {
 
     res.render("list.ejs", {
       availableBooks: result,
-      shopData: req.app.locals.shopData,
-      username: req.session.username
+      shopData: req.app.locals.shopData
     });
   });
 });
@@ -35,28 +35,52 @@ router.get("/list", redirectLogin, function (req, res, next) {
 router.get("/addbook", redirectLogin, function (req, res, next) {
   res.render("addbook.ejs", {
     shopData: req.app.locals.shopData,
-    username: req.session.username
+    errors: [],
+    name: "",
+    price: ""
   });
 });
 
-// Add a book to the database (protected)
-router.post("/bookadded", redirectLogin, function (req, res, next) {
-  const sqlquery = "INSERT INTO books (name, price) VALUES (?, ?)";
+// Add a book to the database (protected + validated + sanitised)
+router.post(
+  "/bookadded",
+  redirectLogin,
+  [
+    check("name")
+      .notEmpty()
+      .withMessage("Book name is required."),
+    check("price")
+      .isFloat({ min: 1 })
+      .withMessage("Price must be a number greater than 0.")
+  ],
+  function (req, res, next) {
 
-  const newrecord = [req.body.name, req.body.price];
+    const errors = validationResult(req);
 
-  db.query(sqlquery, newrecord, (err, result) => {
-    if (err) {
-      return next(err);
+    // Sanitise inputs to protect against XSS
+    const name = req.sanitize(req.body.name);
+    const price = req.sanitize(req.body.price);
+
+    if (!errors.isEmpty()) {
+      return res.render("addbook.ejs", {
+        shopData: req.app.locals.shopData,
+        errors: errors.array(),
+        name,
+        price
+      });
     }
-    res.send(
-      "This book is added to database: " +
-        req.body.name +
-        " — £" +
-        req.body.price
-    );
-  });
-});
+
+    const sqlquery = "INSERT INTO books (name, price) VALUES (?, ?)";
+    db.query(sqlquery, [name, price], (err, result) => {
+      if (err) {
+        return next(err);
+      }
+
+      // Better UX: redirect instead of plain text
+      res.redirect("/books/list");
+    });
+  }
+);
 
 // Bargain books (< £20) (protected)
 router.get("/bargainbooks", redirectLogin, function (req, res, next) {
@@ -69,22 +93,22 @@ router.get("/bargainbooks", redirectLogin, function (req, res, next) {
 
     res.render("list.ejs", {
       availableBooks: result,
-      shopData: req.app.locals.shopData,
-      username: req.session.username
+      shopData: req.app.locals.shopData
     });
   });
 });
 
-// Search form (public – add redirectLogin here too if you want it protected)
+// Search form (public)
 router.get("/search", function (req, res, next) {
   res.render("search.ejs", {
     shopData: req.app.locals.shopData
   });
 });
 
-// Search results (public – add redirectLogin here too if you want it protected)
+// Search results (public)
 router.get("/search-result", function (req, res, next) {
-  const keyword = req.query.keyword;
+  // Sanitise search keyword
+  const keyword = req.sanitize(req.query.keyword || "");
   const sqlquery = "SELECT * FROM books WHERE name LIKE ?";
 
   const searchValue = "%" + keyword + "%";
