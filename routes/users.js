@@ -5,7 +5,7 @@ const saltRounds = 10;
 
 const db = global.db;
 
-
+// Middleware to require login
 const redirectLogin = (req, res, next) => {
   if (!req.session.userId) {
     return res.redirect("/users/login");
@@ -13,14 +13,14 @@ const redirectLogin = (req, res, next) => {
   next();
 };
 
-
+// Register form
 router.get("/register", function (req, res, next) {
   res.render("register.ejs", {
     shopData: req.app.locals.shopData
   });
 });
 
-
+// Handle registration
 router.post("/registered", function (req, res, next) {
   const username = req.body.username;
   const first = req.body.first;
@@ -28,39 +28,53 @@ router.post("/registered", function (req, res, next) {
   const email = req.body.email;
   const plainPassword = req.body.password;
 
-  bcrypt.hash(plainPassword, saltRounds, function (err, hashedPassword) {
+  // Basic validation
+  if (!username || !first || !last || !email || !plainPassword) {
+    return res.send("All fields (username, first name, last name, email, password) are required.");
+  }
+
+  // Check if username already exists
+  const checkSql = "SELECT id FROM users WHERE username = ?";
+  db.query(checkSql, [username], (err, rows) => {
     if (err) {
-      console.error("Error hashing password:", err);
-      return res.status(500).send("Error hashing password");
+      console.error("Error checking existing user:", err);
+      return next(err);
     }
 
-    const sql = `
-      INSERT INTO users (username, first_name, last_name, email, hashedPassword)
-      VALUES (?, ?, ?, ?, ?)
-    `;
-    const params = [username, first, last, email, hashedPassword];
+    if (rows.length > 0) {
+      return res.send("Username already exists. Please choose another username.");
+    }
 
-    db.query(sql, params, function (err, result) {
+    // Username is free – hash password and insert
+    bcrypt.hash(plainPassword, saltRounds, function (err, hashedPassword) {
       if (err) {
-        console.error("Error inserting user:", err);
-        return res
-          .status(500)
-          .send("Error saving user to database: " + err.message);
+        console.error("Error hashing password:", err);
+        return res.status(500).send("Error hashing password");
       }
 
-      let response = `
-        Hello ${first} ${last}, you are now registered!<br>
-        We will send an email to you at ${email}.<br><br>
-        Your password is: ${plainPassword}<br>
-        Your hashed password is: ${hashedPassword}
+      const sql = `
+        INSERT INTO users (username, first_name, last_name, email, hashedPassword)
+        VALUES (?, ?, ?, ?, ?)
       `;
+      const params = [username, first, last, email, hashedPassword];
 
-      res.send(response);
+      db.query(sql, params, function (err, result) {
+        if (err) {
+          console.error("Error inserting user:", err);
+          return res
+            .status(500)
+            .send("Error saving user to database: " + err.message);
+        }
+
+        // Do NOT send plain or hashed password back to the browser
+        // Redirect to login page after successful registration
+        res.redirect("/users/login");
+      });
     });
   });
 });
 
-
+// List users (protected)
 router.get("/list", redirectLogin, function (req, res, next) {
   const sql = "SELECT username, first_name, last_name, email FROM users";
 
@@ -77,17 +91,21 @@ router.get("/list", redirectLogin, function (req, res, next) {
   });
 });
 
-
+// Login form
 router.get("/login", function (req, res, next) {
   res.render("login.ejs", {
     shopData: req.app.locals.shopData
   });
 });
 
-
+// Handle login
 router.post("/loggedin", function (req, res, next) {
   const username = req.body.username;
   const plainPassword = req.body.password;
+
+  if (!username || !plainPassword) {
+    return res.send("Please enter both username and password.");
+  }
 
   const sql = "SELECT * FROM users WHERE username = ?";
   db.query(sql, [username], (err, results) => {
@@ -112,25 +130,19 @@ router.post("/loggedin", function (req, res, next) {
         return next(err);
       }
 
-  
       if (match === true) {
         const auditSql =
           "INSERT INTO audit_log (username, success, message) VALUES (?, ?, ?)";
         db.query(auditSql, [username, 1, "login ok"]);
 
-      
+        // Save user session (user is now logged in)
         req.session.userId = user.id;
+        req.session.username = user.username;
 
-        return res.send(
-          "Login successful! Welcome back, " +
-            user.first_name +
-            " " +
-            user.last_name +
-            "."
-        );
+        // Redirect to a protected page after successful login
+        return res.redirect("/books/list"); // change if you prefer another page
       }
 
-   
       const auditSql =
         "INSERT INTO audit_log (username, success, message) VALUES (?, ?, ?)";
       db.query(auditSql, [username, 0, "incorrect password"]);
@@ -140,7 +152,7 @@ router.post("/loggedin", function (req, res, next) {
   });
 });
 
-
+// Audit log (protected)
 router.get("/audit", redirectLogin, function (req, res, next) {
   const sql = "SELECT * FROM audit_log ORDER BY time DESC";
 
@@ -157,5 +169,16 @@ router.get("/audit", redirectLogin, function (req, res, next) {
   });
 });
 
+// Logout (protected)
+router.get("/logout", redirectLogin, function (req, res, next) {
+  req.session.destroy(err => {
+    if (err) {
+      console.error("Error destroying session:", err);
+      return next(err);
+    }
+    res.clearCookie("connect.sid");
+    res.send("You are now logged out. <a href='/'>Home</a>");
+  });
+});
 
 module.exports = router;

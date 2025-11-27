@@ -2,21 +2,50 @@
 <html>
 
 <head>
-  <title>Welcome to <%=shopData.shopName%>
+  <title>Welcome to <%= shopData.shopName %>
   </title>
   <link rel="stylesheet" type="text/css" href="/main.css" />
 </head>
 
 <body>
-  <h1>Welcome to <%=shopData.shopName%>
-  </h1>
-  <p><a href="about">About <%=shopData.shopName%></a></p>
-  <p><a href="books/search">Search for books</a></p>
-  <p><a href="users/register">Register with us</a></p>
-  <p><a href="books/addbook">Add a new book</a></p>
-  <p><a href="books/list">List books</a></p>
-  <p><a href="/books/bargainbooks">Bargain Books</a></p>
+  <header>
+    <h1>Welcome to <%= shopData.shopName %>
+    </h1>
 
+    <nav>
+      <a href="/">Home</a>
+      <a href="/about">About <%= shopData.shopName %></a>
+      <a href="/books/search">Search for books</a>
+      <a href="/books/bargainbooks">Bargain Books</a>
+      <a href="/books/list">List books</a>
+      <a href="/books/addbook">Add a new book</a>
+
+      <% if (username) { %>
+        <!-- Logged-in view -->
+        <span class="welcome">Welcome, <%= username %>!</span>
+        <a href="/users/list">Users</a>
+        <a href="/users/audit">Audit log</a>
+        <a href="/users/logout">Logout</a>
+        <% } else { %>
+          <!-- Logged-out view -->
+          <a href="/users/login">Login</a>
+          <a href="/users/register">Register</a>
+          <% } %>
+    </nav>
+
+    <hr>
+  </header>
+
+  <main>
+    <% if (username) { %>
+      <p>Great to see you again, <%= username %>! Explore your bookstore.</p>
+      <% } else { %>
+        <p>Welcome to <%= shopData.shopName %> — your friendly neighbourhood book shop.</p>
+        <p>Create an account or log in to access more features.</p>
+        <% } %>
+
+          <p>Use the links above to browse our books, search for specific titles, or manage your account.</p>
+  </main>
 </body>
 
 </html>

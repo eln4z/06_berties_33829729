@@ -3,46 +3,59 @@ const session = require('express-session');
 const ejs = require('ejs');
 const path = require('path');
 const mysql = require('mysql2');
-require('dotenv').config();  
+require('dotenv').config();
+
+const SESSION_SECRET = process.env.SESSION_SECRET || "fallback_secret";
+
 
 const app = express();
 const port = process.env.PORT || 8000;
 
-
+// View engine
 app.set('view engine', 'ejs');
 
-
+// Parse form data
 app.use(express.urlencoded({ extended: true }));
 
-
+// Static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-
+// Globals for views
 app.locals.shopData = { shopName: "Bertie's Books" };
 
+// Session configuration
+const SESSION_SECRET = process.env.SESSION_SECRET || 'somerandomstuff';
+
 app.use(session({
-    secret: 'somerandomstuff',
+    secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
-        expires: 600000
+        maxAge: 600000
     }
 }));
 
+// Make the logged-in username available in all views
+app.use((req, res, next) => {
+  res.locals.username = req.session.username || null;
+  next();
+});
 
 
+// Database pool
 const db = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: process.env.DB_CONNECTION_LIMIT || 10,
-  queueLimit: 0
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    waitForConnections: true,
+    connectionLimit: process.env.DB_CONNECTION_LIMIT || 10,
+    queueLimit: 0
 });
 
 global.db = db;
 
+// Routes
 const mainRoutes = require('./routes/main');
 app.use('/', mainRoutes);
 
@@ -52,7 +65,7 @@ app.use('/users', usersRoutes);
 const booksRoutes = require('./routes/books');
 app.use('/books', booksRoutes);
 
-
+// Start server
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}/`);
 });

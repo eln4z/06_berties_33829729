@@ -2,35 +2,60 @@
 <html>
 
 <head>
-    <title>Bertie's Book Shop</title>
+    <title>
+        <%= shopData.shopName %> - Book List
+    </title>
     <link rel="stylesheet" href="/main.css">
 </head>
 
 <body>
-    <h1>
-        <%= shopData.shopName %> - Book List
-    </h1>
+    <header>
+        <h1>
+            <%= shopData.shopName %> - Book List
+        </h1>
 
-    <h2>Available Books</h2>
+        <nav>
+            <a href="/">Home</a>
+            <a href="/about">About <%= shopData.shopName %></a>
+            <a href="/books/search">Search for books</a>
+            <a href="/books/bargainbooks">Bargain Books</a>
+            <a href="/books/list">List books</a>
+            <a href="/books/addbook">Add a new book</a>
 
-    <table border="1" cellpadding="10">
-        <tr>
-            <th>Book Name</th>
-            <th>Price (£)</th>
-        </tr>
+            <% if (username) { %>
+                <span class="welcome">Welcome, <%= username %>!</span>
+                <a href="/users/list">Users</a>
+                <a href="/users/audit">Audit log</a>
+                <a href="/users/logout">Logout</a>
+                <% } else { %>
+                    <a href="/users/login">Login</a>
+                    <a href="/users/register">Register</a>
+                    <% } %>
+        </nav>
+        <hr>
+    </header>
 
-        <% availableBooks.forEach(function(book) { %>
+    <main>
+        <h2>Available Books</h2>
+
+        <table border="1" cellpadding="10">
             <tr>
-                <td>
-                    <%= book.name %>
-                </td>
-                <td>
-                    <%= book.price %>
-                </td>
+                <th>Book Name</th>
+                <th>Price (£)</th>
             </tr>
-            <% }); %>
-    </table>
 
+            <% availableBooks.forEach(function(book) { %>
+                <tr>
+                    <td>
+                        <%= book.name %>
+                    </td>
+                    <td>
+                        <%= book.price %>
+                    </td>
+                </tr>
+                <% }); %>
+        </table>
+    </main>
 </body>
 
 </html>
