@@ -17,16 +17,18 @@
       <a href="/about">About <%= shopData.shopName %></a>
       <a href="/books/search">Search for books</a>
       <a href="/books/bargainbooks">Bargain Books</a>
-      <a href="/books/list">List books</a>
-      <a href="/books/addbook">Add a new book</a>
+      <a href="/books/list">List Books</a>
+      <a href="/books/addbook">Add a new Book</a>
+
+      <!-- Weather link -->
+      <a href="/weather">Check the Weather</a>
 
       <% if (username) { %>
         <span class="welcome">Welcome, <%= username %>!</span>
         <a href="/users/list">Users</a>
-        <a href="/users/audit">Audit log</a>
+        <a href="/users/audit">Audit Log</a>
         <a href="/users/logout">Logout</a>
         <% } else { %>
-
           <a href="/users/login">Login</a>
           <a href="/users/register">Register</a>
           <% } %>
@@ -43,8 +45,9 @@
         <p>Create an account or log in to access more features.</p>
         <% } %>
 
-          <p>Use the links above to browse our books, search for specific titles, or manage your account.</p>
+          <p>Use the links above to browse books, search titles, manage your account, or check today’s weather.</p>
   </main>
+
 </body>
 
 </html>
