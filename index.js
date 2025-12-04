@@ -14,10 +14,11 @@ const port = process.env.PORT || 8000;
 app.set('view engine', 'ejs');
 
 app.use(express.urlencoded({ extended: true }));
-
 app.use(expressSanitizer());
 
+
 app.use(express.static(path.join(__dirname, 'public')));
+
 
 app.locals.shopData = { shopName: "Bertie's Books" };
 
@@ -26,9 +27,10 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    maxAge: 600000
+    maxAge: 600000 
   }
 }));
+
 
 app.use((req, res, next) => {
   res.locals.username = req.session.username || null;
@@ -44,17 +46,18 @@ const db = mysql.createPool({
   connectionLimit: process.env.DB_CONNECTION_LIMIT || 10,
   queueLimit: 0
 });
-
 global.db = db;
 
-const mainRoutes = require('./routes/main');
-app.use('/', mainRoutes);
-
+const mainRoutes  = require('./routes/main');
 const usersRoutes = require('./routes/users');
-app.use('/users', usersRoutes);
-
 const booksRoutes = require('./routes/books');
+
+const apiRoutes   = require('./routes/api');
+
+app.use('/', mainRoutes);
+app.use('/users', usersRoutes);
 app.use('/books', booksRoutes);
+app.use('/api', apiRoutes);
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
