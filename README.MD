@@ -1,128 +1,143 @@
 # Bertie’s Books
 
-A small Node.js web application built for the **Dynamic Web Applications** module.
-Users can create accounts, log in, and manage a list of books stored in a MySQL database.
+A full-stack Node.js web application built for the Dynamic Web Applications module.
+Users can register, log in, search and add books, and retrieve book data through a REST API.
+Data is stored in a MySQL/MariaDB database.
 
----
 
 ## Features
 
 ### Users
 
-* Register an account
-* Log in and log out
-* Passwords stored securely (bcrypt)
+* Register and log in
+* Passwords stored securely using bcrypt
+* Sessions stored using express-session
 * Protected pages require login
-* Login attempts logged (audit log)
+* Login attempts recorded in an audit log
+* Logout functionality
 
 ### Books
 
-* View all books
-* Add a new book
-* Search by name
-* Bargain books (price < £20)
-* Server-side form validation
+* View a full list of books
+* Add a new book with validation and sanitization
+* Search for books by title (partial match)
+* View bargain books under £20
+* All data stored in a MySQL database
 
----
+### API (JSON)
 
-## Technologies
+The application provides JSON data through REST API endpoints:
 
-* Node.js + Express
-* MySQL (mysql2)
+* `/api/books`
+  Returns a JSON list of all books.
+
+* `/api/books?search=world`
+  Returns books whose titles contain the word “world”.
+
+* `/api/books?minprice=5&maxprice=15`
+  Returns books within a price range.
+
+* `/api/books?sort=name`
+  Returns books sorted by title (alphabetically).
+
+* `/api/books?sort=price`
+  Returns books sorted by price (lowest first).
+
+
+## Technologies Used
+
+* Node.js and Express
+* MySQL/MariaDB using mysql2
 * EJS templates
 * express-session
 * bcrypt
 * express-validator
+* express-sanitizer
 * dotenv
+
+
+## Running Locally
+
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Create a `.env` File in the Project Root
+
+```
+DB_HOST=localhost
+DB_USER=berties_books_app
+DB_PASSWORD=qwertyuiop
+DB_NAME=berties_books
+DB_CONNECTION_LIMIT=10
+SESSION_SECRET=changeme
+PORT=8000
+```
+
+Note: `.env` is not tracked in Git for security.
+
+### 3. Set Up the Database
+
+```bash
+mysql -u berties_books_app -p berties_books < create_db.sql
+mysql -u berties_books_app -p berties_books < insert_test_data.sql
+```
+
+### 4. Start the Server
+
+```bash
+node index.js
+```
+
+Open in a browser:
+
+```
+http://localhost:8000
+```
 
 ---
 
-# Run the App (Local)
+## Running on Goldsmiths VM
 
-### 1. Install packages
-npm install
+### Start the Application in the Background
 
-### 2. Create a `.env` file
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=yourpassword
-DB_NAME=berties_books
-DB_CONNECTION_LIMIT=10
-SESSION_SECRET=mysecret
+```bash
+nohup node index.js > out.log 2>&1 &
+```
 
-> `.env` is in `.gitignore` and not pushed to GitHub.
+### Check if Node is Running
 
-### 3. Database setup
+```bash
+ps aux | grep node
+```
 
-```sql
-CREATE DATABASE berties_books;
-USE berties_books;
+### Stop Node
 
-CREATE TABLE users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  username VARCHAR(50) UNIQUE,
-  first_name VARCHAR(100),
-  last_name VARCHAR(100),
-  email VARCHAR(255),
-  hashedPassword VARCHAR(255)
-);
+```bash
+pkill node
+```
 
-CREATE TABLE books (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(255),
-  price DECIMAL(10,2)
-);
+### VM Public URL Format
 
-CREATE TABLE audit_log (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  username VARCHAR(255),
-  success TINYINT(1),
-  message VARCHAR(255),
-  time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+```
+https://www.doc.gold.ac.uk/usr/<your_user_number>/
+```
 
+Example:
 
-### 4. Start the server
-
-
-node index.js
-
-
-Then open:
-
-
-http://localhost:8000
-
-
-# Running With Forever (on VM)
-
-Start:
-
-
-forever start index.js
-
-
-Check running apps:
-
-
-forever list
-
-
-Stop:
-
-forever stop index.js
-
-
-Stop all:
-
-
-forever stopall
+```
+https://www.doc.gold.ac.uk/usr/454/
+```
 
 ## What I Learned
 
-* Creating routes with Express
-* Using EJS templates
-* Handling forms and validation
-* Connecting Node.js to MySQL
-* Password hashing and sessions
-* Protecting pages with middleware
+* Building Express applications
+* Rendering dynamic pages using EJS
+* Validating and sanitizing form data
+* Hashing passwords and using sessions
+* Restricting access to protected pages
+* Building REST API endpoints
+* Deploying Node.js apps to a Linux VM
+* Managing MySQL users and permissions
