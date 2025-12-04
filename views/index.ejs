@@ -13,16 +13,13 @@
     </h1>
 
     <nav>
-      <a href="/">Home</a>
-      <a href="/about">About <%= shopData.shopName %></a>
-      <a href="/books/search">Search for books</a>
-      <a href="/books/bargainbooks">Bargain Books</a>
-      <a href="/books/list">List Books</a>
-      <a href="/books/addbook">Add a new Book</a>
-
-      <!-- Weather link -->
-      <a href="/weather">Check the Weather</a>
-
+      <a href=".">Home</a>
+      <a href="about">About <%= shopData.shopName %></a>
+      <a href="books/search">Search for books</a>
+      <a href="books/bargainbooks">Bargain Books</a>
+      <a href="books/list">List books</a>
+      <a href="books/addbook">Add a new book</a>
+      <a href="weather">Check the Weather</a>
       <% if (username) { %>
         <span class="welcome">Welcome, <%= username %>!</span>
         <a href="/users/list">Users</a>
